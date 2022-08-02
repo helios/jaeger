@@ -69,5 +69,5 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         COMMIT_HASH: ${{ github.sha }}
-        PROJECT_NAME: ${{ PROJECT_NAME }}
-        AWS_REGION: ${{ AWS_REGION }}
+        PROJECT_NAME: ${{ env.PROJECT_NAME }}
+        AWS_REGION: ${{ env.AWS_REGION }}
