@@ -16,5 +16,5 @@ docker buildx build \
 
 docker tag $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH $ECR_REGISTRY/$PROJECT_NAME:latest
 
-# docker push $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH
-# docker push $ECR_REGISTRY/$PROJECT_NAME:latest
+docker push $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH
+docker push $ECR_REGISTRY/$PROJECT_NAME:latest
