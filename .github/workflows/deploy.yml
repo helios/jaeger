@@ -30,8 +30,6 @@ jobs:
                   DOCKER_IMAGE_TAG: ${{ github.event.inputs.dockerImageTag }}
                   DEPLOY_AWS_ACCESS_KEY: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
                   DEPLOY_AWS_SECRET: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
-                  AIRBRAKE_PROJECT_ID: 380559
-                  AIRBRAKE_PROJECT_KEY: ${{ secrets.AIRBRAKE_PROJECT_KEY }}
                   API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
 
             - name: Notify Slack
