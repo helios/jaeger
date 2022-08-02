@@ -15,18 +15,18 @@ jobs:
         platform:
         - name: linux
           task: build-binaries-linux
-        - name: windows
-          task: build-binaries-windows
-        - name: osx
-          task: build-binaries-darwin
-        - name: osx-m1
-          task: build-binaries-darwin-arm64
-        - name: system/390
-          task: build-binaries-s390x
-        - name: arm
-          task: build-binaries-arm64
-        - name: powerpc
-          task: build-binaries-ppc64le
+        # - name: windows
+        #   task: build-binaries-windows
+        # - name: osx
+        #   task: build-binaries-darwin
+        # - name: osx-m1
+        #   task: build-binaries-darwin-arm64
+        # - name: system/390
+        #   task: build-binaries-s390x
+        # - name: arm
+        #   task: build-binaries-arm64
+        # - name: powerpc
+        #   task: build-binaries-ppc64le
     name: build binaries for ${{ matrix.platform.name }}
     steps:
     - uses: actions/checkout@v3

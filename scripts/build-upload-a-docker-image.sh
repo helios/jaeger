@@ -47,13 +47,13 @@ upload_flag=""
 
 if [[ "${local_test_only}" = "Y" ]]; then
     IMAGE_TAGS="--tag localhost:5000/${name_space}/${component_name}:latest"
-    PUSHTAG="type=image, push=true"
+    PUSHTAG="type=image, push=false"
 else
     # Only push multi-arch images to dockerhub/quay.io for main branch or for release tags vM.N.P
     if [[ "$BRANCH" == "main" || $BRANCH =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 	    echo "build docker images and upload to dockerhub/quay.io, BRANCH=$BRANCH"
 	    bash scripts/docker-login.sh
-	    PUSHTAG="type=image, push=true"
+	    PUSHTAG="type=image, push=false"
 	    upload_flag=" and uploading"
     else
 	    echo 'skip docker images upload, only allowed for tagged releases or main (latest tag)'
