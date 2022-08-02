@@ -12,11 +12,6 @@ docker buildx build \
     --platform=linux/amd64 \
     --file cmd/query/Dockerfile \
     --tag $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH \
+    --tag $ECR_REGISTRY/$PROJECT_NAME:latest \
     --push \
     cmd/query
-
-docker tag $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH
-docker tag $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH $ECR_REGISTRY/$PROJECT_NAME:latest
-
-docker push $ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH
-docker push $ECR_REGISTRY/$PROJECT_NAME:latest
