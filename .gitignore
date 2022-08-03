@@ -8,9 +8,9 @@
 cover.html
 .envrc
 .idea/
-.vscode/
 .tmp/
 .mkdocs-virtual-env/
+.vscode/*.log
 vendor/
 examples/hotrod/hotrod
 examples/hotrod/hotrod-*
@@ -28,6 +28,7 @@ cmd/es-index-cleaner/es-index-cleaner-*
 cmd/es-rollover/es-rollover-*
 cmd/query/query
 cmd/query/query-*
+cmd/query/app/ui/actual/
 cmd/tracegen/tracegen
 cmd/tracegen/tracegen-*
 cmd/docs/*.md
