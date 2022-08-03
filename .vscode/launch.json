@@ -46,7 +46,7 @@
             "env": {
                 "SPAN_STORAGE_TYPE": "elasticsearch",
                 "ES_MAX_SPAN_AGE": "720h0m0s",
-                "ES_SERVER_URLS": "https://search-heliosphere-65ue5gis72hr5db64oth3zz4pe.us-east-1.es.amazonaws.com",
+                "ES_SERVER_URLS": "***",
                 "ES_USERNAME": "***",
                 "ES_PASSWORD": "***",
             }
