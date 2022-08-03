@@ -8,7 +8,6 @@
 cover.html
 .envrc
 .idea/
-.vscode/
 .tmp/
 .mkdocs-virtual-env/
 vendor/
