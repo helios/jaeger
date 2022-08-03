@@ -207,8 +207,7 @@ func getSourceFn(archive bool, maxDocCount int) sourceFn {
 			Size(maxDocCount).
 			TerminateAfter(maxDocCount)
 		if !archive {
-			s.Sort("startTime", true).
-				SearchAfter(nextTime)
+			s.Sort("startTime", true)
 		}
 		return s
 	}
