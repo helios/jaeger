@@ -24,6 +24,8 @@ type TraceID string
 // SpanID is the id of a span
 type SpanID string
 
+type OrgId string
+
 // ProcessID is a hashed value of the Process struct that is unique within the trace.
 type ProcessID string
 
@@ -64,6 +66,7 @@ type Trace struct {
 type Span struct {
 	TraceID       TraceID     `json:"traceID"`
 	SpanID        SpanID      `json:"spanID"`
+	OrgId         OrgId       `json:"orgId"`
 	ParentSpanID  SpanID      `json:"parentSpanID,omitempty"` // deprecated
 	Flags         uint32      `json:"flags,omitempty"`
 	OperationName string      `json:"operationName"`
