@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/gofrs/uuid"
 	"github.com/gogo/protobuf/jsonpb"
 )
 
@@ -40,6 +41,8 @@ type TraceID struct {
 // SpanID is a random 64bit identifier for a span
 type SpanID uint64
 
+type OrgId uuid.UUID
+
 // ------- TraceID -------
 
 // NewTraceID creates a new TraceID from two 64bit unsigned ints.
@@ -52,6 +55,10 @@ func (t TraceID) String() string {
 		return fmt.Sprintf("%016x", t.Low)
 	}
 	return fmt.Sprintf("%016x%016x", t.High, t.Low)
+}
+
+func (o OrgId) String() string {
+	return uuid.UUID(o).String()
 }
 
 // TraceIDFromString creates a TraceID from a hexadecimal string

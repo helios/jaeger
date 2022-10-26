@@ -139,6 +139,10 @@ func (c *grpcClient) GetTrace(ctx context.Context, traceID model.TraceID) (*mode
 	return readTrace(stream)
 }
 
+func (c *grpcClient) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	return nil, nil
+}
+
 // GetServices returns a list of all known services
 func (c *grpcClient) GetServices(ctx context.Context) ([]string, error) {
 	resp, err := c.readerClient.GetServices(upgradeContext(ctx), &storage_v1.GetServicesRequest{})

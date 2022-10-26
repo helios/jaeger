@@ -37,6 +37,7 @@ type Reader interface {
 	//
 	// If no spans are stored for this trace, it returns ErrTraceNotFound.
 	GetTrace(ctx context.Context, traceID model.TraceID) (*model.Trace, error)
+	GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error)
 
 	// GetServices returns all service names known to the backend from spans
 	// within its retention period.

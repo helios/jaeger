@@ -172,6 +172,10 @@ func (r *TraceReader) GetTrace(ctx context.Context, traceID model.TraceID) (*mod
 	return nil, ErrInternalConsistencyError
 }
 
+func (r *TraceReader) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	return nil, nil
+}
+
 // scanTimeRange returns all the Traces found between startTs and endTs
 func (r *TraceReader) scanTimeRange(plan *executionPlan) ([]model.TraceID, error) {
 	// We need to do a full table scan

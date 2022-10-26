@@ -96,6 +96,13 @@ func (m *ReadMetricsDecorator) GetTrace(ctx context.Context, traceID model.Trace
 	return retMe, err
 }
 
+func (m *ReadMetricsDecorator) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	start := time.Now()
+	retMe, err := m.spanReader.GetTraceForOrg(ctx, traceID, orgId)
+	m.getTraceMetrics.emit(err, time.Since(start), 1)
+	return retMe, err
+}
+
 // GetServices implements spanstore.Reader#GetServices
 func (m *ReadMetricsDecorator) GetServices(ctx context.Context) ([]string, error) {
 	start := time.Now()

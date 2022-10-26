@@ -48,6 +48,7 @@ const (
 	indexPrefixSeparator    = "-"
 
 	traceIDField           = "traceID"
+	orgIdField             = "process.tag.orgId"
 	durationField          = "duration"
 	startTimeField         = "startTime"
 	startTimeMillisField   = "startTimeMillis"
@@ -256,6 +257,20 @@ func (s *SpanReader) GetTrace(ctx context.Context, traceID model.TraceID) (*mode
 	return traces[0], nil
 }
 
+func (s *SpanReader) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetTraceForOrg")
+	defer span.Finish()
+	currentTime := time.Now()
+	traces, err := s.multiReadWithOrg(ctx, []model.TraceID{traceID}, orgId, currentTime.Add(-s.maxSpanAge), currentTime)
+	if err != nil {
+		return nil, err
+	}
+	if len(traces) == 0 {
+		return nil, spanstore.ErrTraceNotFound
+	}
+	return traces[0], nil
+}
+
 func (s *SpanReader) collectSpans(esSpansRaw []*elastic.SearchHit) ([]*model.Span, error) {
 	spans := make([]*model.Span, len(esSpansRaw))
 
@@ -447,6 +462,89 @@ func (s *SpanReader) multiRead(ctx context.Context, traceIDs []model.TraceID, st
 	return traces, nil
 }
 
+func (s *SpanReader) multiReadWithOrg(ctx context.Context, traceIDs []model.TraceID, orgId model.OrgId, startTime, endTime time.Time) ([]*model.Trace, error) {
+	childSpan, _ := opentracing.StartSpanFromContext(ctx, "multiRead")
+	childSpan.LogFields(otlog.Object("trace_ids", traceIDs), otlog.Object("orgId", orgId))
+	defer childSpan.Finish()
+
+	if len(traceIDs) == 0 {
+		return []*model.Trace{}, nil
+	}
+
+	// Add an hour in both directions so that traces that straddle two indexes are retrieved.
+	// i.e starts in one and ends in another.
+	indices := s.timeRangeIndices(s.spanIndexPrefix, s.spanIndexDateLayout, startTime.Add(-time.Hour), endTime.Add(time.Hour), s.spanIndexRolloverFrequency)
+	nextTime := model.TimeAsEpochMicroseconds(startTime.Add(-time.Hour))
+	searchAfterTime := make(map[model.TraceID]uint64)
+	totalDocumentsFetched := make(map[model.TraceID]int)
+	tracesMap := make(map[model.TraceID]*model.Trace)
+	for {
+		if len(traceIDs) == 0 {
+			break
+		}
+		searchRequests := make([]*elastic.SearchRequest, len(traceIDs))
+		for i, traceID := range traceIDs {
+			traceQuery := buildOrgTraceQuery(traceID, orgId)
+			query := elastic.NewBoolQuery().
+				Must(traceQuery)
+			if s.useReadWriteAliases {
+				startTimeRangeQuery := s.buildStartTimeQuery(startTime.Add(-time.Hour*24), endTime.Add(time.Hour*24))
+				query = query.Must(startTimeRangeQuery)
+			}
+
+			if val, ok := searchAfterTime[traceID]; ok {
+				nextTime = val
+			}
+
+			s := s.sourceFn(query, nextTime)
+			searchRequests[i] = elastic.NewSearchRequest().
+				IgnoreUnavailable(true).
+				Source(s)
+		}
+		// set traceIDs to empty
+		traceIDs = nil
+		results, err := s.client.MultiSearch().Add(searchRequests...).Index(indices...).Do(ctx)
+		if err != nil {
+			logErrorToSpan(childSpan, err)
+			return nil, err
+		}
+
+		if results.Responses == nil || len(results.Responses) == 0 {
+			break
+		}
+
+		for _, result := range results.Responses {
+			if result.Hits == nil || len(result.Hits.Hits) == 0 {
+				continue
+			}
+			spans, err := s.collectSpans(result.Hits.Hits)
+			if err != nil {
+				logErrorToSpan(childSpan, err)
+				return nil, err
+			}
+			lastSpan := spans[len(spans)-1]
+
+			if traceSpan, ok := tracesMap[lastSpan.TraceID]; ok {
+				traceSpan.Spans = append(traceSpan.Spans, spans...)
+			} else {
+				tracesMap[lastSpan.TraceID] = &model.Trace{Spans: spans}
+			}
+
+			totalDocumentsFetched[lastSpan.TraceID] = totalDocumentsFetched[lastSpan.TraceID] + len(result.Hits.Hits)
+			if totalDocumentsFetched[lastSpan.TraceID] < int(result.TotalHits()) {
+				traceIDs = append(traceIDs, lastSpan.TraceID)
+				searchAfterTime[lastSpan.TraceID] = model.TimeAsEpochMicroseconds(lastSpan.StartTime)
+			}
+		}
+	}
+
+	var traces []*model.Trace
+	for _, trace := range tracesMap {
+		traces = append(traces, trace)
+	}
+	return traces, nil
+}
+
 func buildTraceByIDQuery(traceID model.TraceID) elastic.Query {
 	traceIDStr := traceID.String()
 	if traceIDStr[0] != '0' {
@@ -464,6 +562,14 @@ func buildTraceByIDQuery(traceID model.TraceID) elastic.Query {
 	return elastic.NewBoolQuery().Should(
 		elastic.NewTermQuery(traceIDField, traceIDStr).Boost(2),
 		elastic.NewTermQuery(traceIDField, legacyTraceID))
+}
+
+func buildOrgTraceQuery(traceID model.TraceID, orgId model.OrgId) elastic.Query {
+	traceIDStr := traceID.String()
+	orgIdStr := orgId.String()
+	return elastic.NewBoolQuery().Filter(
+		elastic.NewTermQuery(traceIDField, traceIDStr),
+		elastic.NewTermQuery(orgIdField, orgIdStr))
 }
 
 func convertTraceIDsStringsToModels(traceIDs []string) ([]model.TraceID, error) {

@@ -212,6 +212,10 @@ func (s *SpanReader) GetTrace(ctx context.Context, traceID model.TraceID) (*mode
 	return s.readTrace(ctx, dbmodel.TraceIDFromDomain(traceID))
 }
 
+func (s *SpanReader) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	return nil, nil
+}
+
 func validateQuery(p *spanstore.TraceQueryParameters) error {
 	if p == nil {
 		return ErrMalformedRequestObject

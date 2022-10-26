@@ -206,6 +206,10 @@ func (st *Store) GetTrace(ctx context.Context, traceID model.TraceID) (*model.Tr
 	return copyTrace(trace)
 }
 
+func (st *Store) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	return nil, nil
+}
+
 // Spans may still be added to traces after they are returned to user code, so make copies.
 func copyTrace(trace *model.Trace) (*model.Trace, error) {
 	bytes, err := proto.Marshal(trace)
