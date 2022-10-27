@@ -267,5 +267,9 @@ func (o OrgId) String() string {
 }
 
 func OrgIdFromString(s string) (OrgId, error) {
-	return NewOrgId(uuid.FromStringOrNil(s)), nil
+	orgId, err := uuid.FromString(s)
+	if err != nil {
+		return NewOrgId(uuid.UUID{0}), err
+	}
+	return NewOrgId(orgId), nil
 }
