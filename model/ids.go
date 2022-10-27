@@ -57,10 +57,6 @@ func (t TraceID) String() string {
 	return fmt.Sprintf("%016x%016x", t.High, t.Low)
 }
 
-func (o OrgId) String() string {
-	return uuid.UUID(o).String()
-}
-
 // TraceIDFromString creates a TraceID from a hexadecimal string
 func TraceIDFromString(s string) (TraceID, error) {
 	var hi, lo uint64
@@ -258,4 +254,18 @@ func (s *SpanID) UnmarshalJSON(data []byte) error {
 //       https://github.com/gogo/protobuf/issues/411#issuecomment-393856837
 func (s *SpanID) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
 	return s.UnmarshalJSON(b)
+}
+
+// ------- OrgId -------
+
+func NewOrgId(orgId uuid.UUID) OrgId {
+	return OrgId(orgId)
+}
+
+func (o OrgId) String() string {
+	return uuid.UUID(o).String()
+}
+
+func OrgIdFromString(s string) (OrgId, error) {
+	return NewOrgId(uuid.FromStringOrNil(s)), nil
 }
