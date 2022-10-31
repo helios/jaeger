@@ -33,8 +33,9 @@ else
 endif
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
-GOBUILD=CGO_ENABLED=0 installsuffix=cgo go build -trimpath
-GOTEST=go test -v $(RACE)
+GOCACHE=$(abspath .gocache)
+GOBUILD=GOCACHE=$(GOCACHE) CGO_ENABLED=0 installsuffix=cgo go build -trimpath
+GOTEST=GOCACHE=$(GOCACHE) go test -v $(RACE)
 GOFMT=gofmt
 GOFUMPT=gofumpt
 FMT_LOG=.fmt.log
@@ -42,7 +43,7 @@ IMPORT_LOG=.import.log
 
 GIT_SHA=$(shell git rev-parse HEAD)
 GIT_CLOSEST_TAG=$(shell git describe --abbrev=0 --tags)
-DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+DATE=$(shell date -u -d @$(shell git show -s --format=%ct) +'%Y-%m-%dT%H:%M:%SZ')
 BUILD_INFO_IMPORT_PATH=$(JAEGER_IMPORT_PATH)/pkg/version
 BUILD_INFO=-ldflags "-X $(BUILD_INFO_IMPORT_PATH).commitSHA=$(GIT_SHA) -X $(BUILD_INFO_IMPORT_PATH).latestVersion=$(GIT_CLOSEST_TAG) -X $(BUILD_INFO_IMPORT_PATH).date=$(DATE)"
 
@@ -82,6 +83,9 @@ go-gen:
 clean:
 	rm -rf cover.out .cover/ cover.html $(FMT_LOG) $(IMPORT_LOG) \
 		jaeger-ui/packages/jaeger-ui/build
+	find ./cmd/query/app/ui/actual -type f -name '*.gz' -delete
+	GOCACHE=$(GOCACHE) go clean -cache -testcache
+	find cmd -type f -executable | xargs -I{} sh -c '(git ls-files --error-unmatch {} 2>/dev/null || rm -v {})'
 
 .PHONY: test
 test: go-gen
@@ -170,15 +174,15 @@ build-tracegen:
 
 .PHONY: build-anonymizer
 build-anonymizer:
-	$(GOBUILD) -o ./cmd/anonymizer/anonymizer-$(GOOS)-$(GOARCH) ./cmd/anonymizer/main.go
+	$(GOBUILD) -o ./cmd/anonymizer/anonymizer-$(GOOS)-$(GOARCH) $(BUILD_INFO) ./cmd/anonymizer/main.go
 
 .PHONY: build-esmapping-generator
 build-esmapping-generator:
-	$(GOBUILD) -o ./plugin/storage/es/esmapping-generator-$(GOOS)-$(GOARCH) ./cmd/esmapping-generator/main.go
+	$(GOBUILD) -o ./plugin/storage/es/esmapping-generator-$(GOOS)-$(GOARCH) $(BUILD_INFO) ./cmd/esmapping-generator/main.go
 
 .PHONY: build-esmapping-generator-linux
 build-esmapping-generator-linux:
-	 GOOS=linux GOARCH=amd64 $(GOBUILD) -o ./plugin/storage/es/esmapping-generator ./cmd/esmapping-generator/main.go
+	 GOOS=linux GOARCH=amd64 $(GOBUILD) -o ./plugin/storage/es/esmapping-generator $(BUILD_INFO) ./cmd/esmapping-generator/main.go
 
 .PHONY: build-es-index-cleaner
 build-es-index-cleaner:
@@ -200,10 +204,10 @@ run-all-in-one: build-ui
 build-ui: cmd/query/app/ui/actual/index.html.gz
 
 cmd/query/app/ui/actual/index.html.gz: jaeger-ui/packages/jaeger-ui/build/index.html
-	rm -rf cmd/query/app/ui/actual
-	mkdir cmd/query/app/ui/actual
+	# do not delete dot-files
+	rm -rf cmd/query/app/ui/actual/*
 	cp -r jaeger-ui/packages/jaeger-ui/build/* cmd/query/app/ui/actual/
-	find cmd/query/app/ui/actual -type f | xargs gzip
+	find cmd/query/app/ui/actual -type f | grep -v .gitignore | xargs gzip --no-name
 
 jaeger-ui/packages/jaeger-ui/build/index.html:
 	$(MAKE) rebuild-ui
@@ -216,8 +220,8 @@ rebuild-ui:
 build-all-in-one-linux:
 	GOOS=linux $(MAKE) build-all-in-one
 
-build-all-in-one-debug build-agent-debug build-query-debug build-collector-debug build-ingester-debug: DISABLE_OPTIMIZATIONS = -gcflags="all=-N -l"
-build-all-in-one-debug build-agent-debug build-query-debug build-collector-debug build-ingester-debug: SUFFIX = -debug
+build-all-in-one-debug build-agent-debug build-query-debug build-collector-debug build-ingester-debug build-remote-storage-debug: DISABLE_OPTIMIZATIONS = -gcflags="all=-N -l"
+build-all-in-one-debug build-agent-debug build-query-debug build-collector-debug build-ingester-debug build-remote-storage-debug: SUFFIX = -debug
 
 .PHONY: build-all-in-one build-all-in-one-debug
 build-all-in-one build-all-in-one-debug: build-ui
@@ -238,6 +242,10 @@ build-collector build-collector-debug:
 .PHONY: build-ingester build-ingester-debug
 build-ingester build-ingester-debug:
 	$(GOBUILD) $(DISABLE_OPTIMIZATIONS) -o ./cmd/ingester/ingester$(SUFFIX)-$(GOOS)-$(GOARCH) $(BUILD_INFO) ./cmd/ingester/main.go
+
+.PHONY: build-remote-storage build-remote-storage-debug
+build-remote-storage build-remote-storage-debug:
+	$(GOBUILD) $(DISABLE_OPTIMIZATIONS) -o ./cmd/remote-storage/remote-storage$(SUFFIX)-$(GOOS)-$(GOARCH) $(BUILD_INFO) ./cmd/remote-storage/main.go
 
 .PHONY: build-binaries-linux
 build-binaries-linux:
@@ -276,7 +284,10 @@ build-platform-binaries: build-agent \
 	build-query-debug \
 	build-ingester \
 	build-ingester-debug \
+	build-remote-storage \
+	build-remote-storage-debug \
 	build-all-in-one \
+	build-all-in-one-debug \
 	build-examples \
 	build-tracegen \
 	build-anonymizer \
@@ -381,8 +392,8 @@ draft-release:
 
 .PHONY: install-tools
 install-tools:
-	go install github.com/vektra/mockery/v2@v2.10.4
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+	go install github.com/vektra/mockery/v2@v2.14.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.48.0
 	go install mvdan.cc/gofumpt@latest
 
 .PHONY: install-ci
@@ -591,3 +602,14 @@ certs:
 .PHONY: certs-dryrun
 certs-dryrun:
 	cd pkg/config/tlscfg/testdata && ./gen-certs.sh -d
+
+.PHONY: repro-check
+repro-check:
+	# Check local reproducibility of generated executables.
+	$(MAKE) clean
+	$(MAKE) build-all-platforms
+	# Generate checksum for all executables under ./cmd
+	find cmd -type f -executable -exec shasum -b -a 256 {} \; | sort -k2 | tee sha256sum.combined.txt
+	$(MAKE) clean
+	$(MAKE) build-all-platforms
+	shasum -b -a 256 --strict --check ./sha256sum.combined.txt
