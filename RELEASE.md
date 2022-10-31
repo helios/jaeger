@@ -13,21 +13,20 @@
         ```
       * Even if a submodule does not have a new release, it should be checked to see if there were any changes warranting cutting a new release and then including it.
     * Rotate the below release managers table placing yourself at the bottom. The date should be the first Wednesday of the month.
-2. Add all merged pull requests to the milestone for the release and create a new milestone for a next release e.g. `Release 1.16`.
-3. After the PR is merged, create a release on Github:
+2. After the PR is merged, create a release on Github:
     * Automated:
        * `make draft-release`
     * Manual:
        * Title "Release X.Y.Z"
        * Tag `vX.Y.Z` (note the `v` prefix) and choose appropriate branch
        * Copy the new CHANGELOG.md section into the release notes
-5. The release tag will trigger a build of the docker images. Since forks don't have jaegertracingbot dockerhub token, they can never publish images to jaegertracing organisation.
+3. The release tag will trigger a build of the docker images. Since forks don't have jaegertracingbot dockerhub token, they can never publish images to jaegertracing organisation.
    1. Check the images are available on [Docker Hub](https://hub.docker.com/r/jaegertracing/).
    2. For monitoring and troubleshooting, refer to the [jaegertracing/jaeger GithubActions tab](https://github.com/jaegertracing/jaeger/actions).
-6. [Publish documentation](https://github.com/jaegertracing/documentation/blob/main/RELEASE.md) for the new version in [jaegertracing.io](https://www.jaegertracing.io/docs/latest).
+4. [Publish documentation](https://github.com/jaegertracing/documentation/blob/main/RELEASE.md) for the new version in [jaegertracing.io](https://www.jaegertracing.io/docs/latest).
    1. Check [jaegertracing.io](https://www.jaegertracing.io/docs/latest) redirects to the new documentation release version URL.
    2. For monitoring and troubleshooting, refer to the [jaegertracing/documentation GithubActions tab](https://github.com/jaegertracing/documentation/actions).
-7. Announce the release on the [mailing list](https://groups.google.com/g/jaeger-tracing), [slack](https://cloud-native.slack.com/archives/CGG7NFUJ3), and [twitter](https://twitter.com/JaegerTracing?lang=en).
+5. Announce the release on the [mailing list](https://groups.google.com/g/jaeger-tracing), [slack](https://cloud-native.slack.com/archives/CGG7NFUJ3), and [twitter](https://twitter.com/JaegerTracing?lang=en).
 
 Maintenance branches should follow naming convention: `release-major.minor` (e.g.`release-1.8`).
 
@@ -53,7 +52,7 @@ Here are the release managers for future versions with the tentative release dat
 
 | Version | Release Manager | Tentative release date |
 |---------|-----------------|------------------------|
-| 1.37.0  | @joe-elliott    | 3 August    2022       |
-| 1.38.0  | @pavolloffay    | 7 September 2022       |
-| 1.39.0  | @yurishkuro     | 2 October   2022       |
-| 1.40.0  | @albertteoh     | 2 November  2022       |
+| 1.39.0  | @albertteoh     | 2 November  2022       |
+| 1.40.0  | @joe-elliott    | 7 December  2022       |
+| 1.41.0  | @pavolloffay    | 4 January   2023       |
+| 1.42.0  | @yurishkuro     | 1 February  2023       |

@@ -125,11 +125,7 @@ func (qOpts *QueryOptions) InitFromViper(v *viper.Viper, logger *zap.Logger) (*Q
 	} else {
 		qOpts.AdditionalHeaders = headers
 	}
-	if tenancy, err := tenancy.InitFromViper(v); err == nil {
-		qOpts.Tenancy = tenancy
-	} else {
-		return qOpts, fmt.Errorf("failed to parse Tenancy options: %w", err)
-	}
+	qOpts.Tenancy = tenancy.InitFromViper(v)
 	return qOpts, nil
 }
 
@@ -146,7 +142,7 @@ func (qOpts *QueryOptions) BuildQueryServiceOptions(storageFactory storage.Facto
 }
 
 // stringSliceAsHeader parses a slice of strings and returns a http.Header.
-//  Each string in the slice is expected to be in the format "key: value"
+// Each string in the slice is expected to be in the format "key: value"
 func stringSliceAsHeader(slice []string) (http.Header, error) {
 	if len(slice) == 0 {
 		return nil, nil

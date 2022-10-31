@@ -28,6 +28,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/zap"
 
 	"github.com/jaegertracing/jaeger/cmd/collector/app/flags"
@@ -40,7 +41,7 @@ import (
 var _ component.Host = (*otelHost)(nil) // API check
 
 // StartOTLPReceiver starts OpenTelemetry OTLP receiver listening on gRPC and HTTP ports.
-func StartOTLPReceiver(options *flags.CollectorOptions, logger *zap.Logger, spanProcessor processor.SpanProcessor, tm *tenancy.TenancyManager) (component.TracesReceiver, error) {
+func StartOTLPReceiver(options *flags.CollectorOptions, logger *zap.Logger, spanProcessor processor.SpanProcessor, tm *tenancy.Manager) (component.TracesReceiver, error) {
 	otlpFactory := otlpreceiver.NewFactory()
 	return startOTLPReceiver(
 		options,
@@ -60,7 +61,7 @@ func startOTLPReceiver(
 	options *flags.CollectorOptions,
 	logger *zap.Logger,
 	spanProcessor processor.SpanProcessor,
-	tm *tenancy.TenancyManager,
+	tm *tenancy.Manager,
 	// from here: params that can be mocked in tests
 	otlpFactory component.ReceiverFactory,
 	newTraces func(consume consumer.ConsumeTracesFunc, options ...consumer.Option) (consumer.Traces, error),
@@ -73,7 +74,8 @@ func startOTLPReceiver(
 	otlpReceiverSettings := component.ReceiverCreateSettings{
 		TelemetrySettings: component.TelemetrySettings{
 			Logger:         logger,
-			TracerProvider: otel.GetTracerProvider(), // TODO we may always want no-op here, not the global default
+			TracerProvider: otel.GetTracerProvider(),      // TODO we may always want no-op here, not the global default
+			MeterProvider:  metric.NewNoopMeterProvider(), // TODO wire this with jaegerlib metrics?
 		},
 	}
 
@@ -140,7 +142,7 @@ func applyTLSSettings(opts *tlscfg.Options) *configtls.TLSServerSetting {
 	}
 }
 
-func newConsumerDelegate(logger *zap.Logger, spanProcessor processor.SpanProcessor, tm *tenancy.TenancyManager) *consumerDelegate {
+func newConsumerDelegate(logger *zap.Logger, spanProcessor processor.SpanProcessor, tm *tenancy.Manager) *consumerDelegate {
 	return &consumerDelegate{
 		batchConsumer: newBatchConsumer(logger,
 			spanProcessor,

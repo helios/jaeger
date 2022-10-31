@@ -24,6 +24,8 @@ cmd/collector/collector
 cmd/collector/collector-*
 cmd/ingester/ingester
 cmd/ingester/ingester-*
+cmd/remote-storage/remote-storage
+cmd/remote-storage/remote-storage-*
 cmd/es-index-cleaner/es-index-cleaner-*
 cmd/es-rollover/es-rollover-*
 cmd/query/query
@@ -39,4 +41,8 @@ crossdock/crossdock-*
 run-crossdock.log
 proto-gen/.patched-otel-proto/
 __pycache__
-
+.asset-manifest.json
+deploy/
+deploy-staging/
+sha256sum.combined.txt
+.gocache
