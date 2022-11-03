@@ -115,6 +115,10 @@ func (r *ingester) GetTrace(ctx context.Context, traceID model.TraceID) (*model.
 	return r.traceStore.GetTrace(ctx, traceID)
 }
 
+func (r *ingester) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	return r.traceStore.GetTraceForOrg(ctx, traceID, orgId)
+}
+
 func (r *ingester) GetServices(ctx context.Context) ([]string, error) {
 	return nil, nil
 }
