@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/mux"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -426,6 +427,9 @@ func (aH *APIHandler) parseTraceID(w http.ResponseWriter, r *http.Request) (mode
 func (aH *APIHandler) parseOrgId(w http.ResponseWriter, r *http.Request) (model.OrgId, bool) {
 	vars := mux.Vars(r)
 	orgIdVar := vars[orgIdParam]
+	if orgIdVar == "" {
+		return model.NewOrgId(uuid.UUID{0}), false
+	}
 	orgId, err := model.OrgIdFromString(orgIdVar)
 	if aH.handleError(w, err, http.StatusBadRequest) {
 		return model.OrgId(orgId), false
