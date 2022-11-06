@@ -14,8 +14,6 @@
 
 1. `make run-all-in-one`.
 
-<<<<<<< HEAD
-
 ## How to Debug
 
 1. in VScode, go to Run and Debug (cmd+shift+D) and run using of the configured run options.
