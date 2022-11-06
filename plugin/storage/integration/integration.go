@@ -135,7 +135,7 @@ func (s *StorageIntegration) testGetLargeSpan(t *testing.T) {
 	s.skipIfNeeded(t)
 	defer s.cleanUp(t)
 
-	t.Log("Testing Large Trace over 10K ...")
+	t.Log("Testing Large Trace over 1K ...")
 	expected := s.loadParseAndWriteLargeTrace(t)
 	expectedTraceID := expected.Spans[0].TraceID
 	s.refresh(t)
@@ -288,10 +288,10 @@ func (s *StorageIntegration) loadParseAndWriteExampleTrace(t *testing.T) *model.
 func (s *StorageIntegration) loadParseAndWriteLargeTrace(t *testing.T) *model.Trace {
 	trace := s.getTraceFixture(t, "example_trace")
 	span := trace.Spans[0]
-	spns := make([]*model.Span, 1, 10008)
+	spns := make([]*model.Span, 1, 1024)
 	trace.Spans = spns
 	trace.Spans[0] = span
-	for i := 1; i < 10008; i++ {
+	for i := 1; i < 1024; i++ {
 		s := new(model.Span)
 		*s = *span
 		s.SpanID = model.SpanID(i)
