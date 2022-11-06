@@ -122,6 +122,29 @@ func (_m *Reader) GetServices(ctx context.Context) ([]string, error) {
 	return r0, r1
 }
 
+// GetTraceForOrg provides a mock function with given fields: ctx, traceID, orgId
+func (_m *Reader) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	ret := _m.Called(ctx, traceID, orgId)
+
+	var r0 *model.Trace
+	if rf, ok := ret.Get(0).(func(context.Context, model.TraceID, model.OrgId) *model.Trace); ok {
+		r0 = rf(ctx, traceID, orgId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Trace)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, model.TraceID, model.OrgId) error); ok {
+		r1 = rf(ctx, traceID, orgId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrace provides a mock function with given fields: ctx, traceID
 func (_m *Reader) GetTrace(ctx context.Context, traceID model.TraceID) (*model.Trace, error) {
 	ret := _m.Called(ctx, traceID)

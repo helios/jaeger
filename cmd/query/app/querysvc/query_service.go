@@ -75,6 +75,17 @@ func (qs QueryService) GetTrace(ctx context.Context, traceID model.TraceID) (*mo
 	return trace, err
 }
 
+func (qs QueryService) GetOrgTrace(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	trace, err := qs.spanReader.GetTraceForOrg(ctx, traceID, orgId)
+	if err == spanstore.ErrTraceNotFound {
+		if qs.options.ArchiveSpanReader == nil {
+			return nil, err
+		}
+		trace, err = qs.options.ArchiveSpanReader.GetTrace(ctx, traceID)
+	}
+	return trace, err
+}
+
 // GetServices is the queryService implementation of spanstore.Reader.GetServices
 func (qs QueryService) GetServices(ctx context.Context) ([]string, error) {
 	return qs.spanReader.GetServices(ctx)

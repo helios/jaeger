@@ -57,6 +57,10 @@ func (r *archiveReader) GetTrace(ctx context.Context, traceID model.TraceID) (*m
 	return readTrace(stream)
 }
 
+func (s *archiveReader) GetTraceForOrg(ctx context.Context, traceID model.TraceID, orgId model.OrgId) (*model.Trace, error) {
+	return nil, nil
+}
+
 // GetServices not used in archiveReader
 func (r *archiveReader) GetServices(ctx context.Context) ([]string, error) {
 	return nil, errors.New("GetServices not implemented")

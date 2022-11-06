@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/gofrs/uuid"
 	"github.com/gogo/protobuf/jsonpb"
 )
 
@@ -39,6 +40,8 @@ type TraceID struct {
 
 // SpanID is a random 64bit identifier for a span
 type SpanID uint64
+
+type OrgId uuid.UUID
 
 // ------- TraceID -------
 
@@ -252,4 +255,22 @@ func (s *SpanID) UnmarshalJSON(data []byte) error {
 // https://github.com/gogo/protobuf/issues/411#issuecomment-393856837
 func (s *SpanID) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
 	return s.UnmarshalJSON(b)
+}
+
+// ------- OrgId -------
+
+func NewOrgId(orgId uuid.UUID) OrgId {
+	return OrgId(orgId)
+}
+
+func (o OrgId) String() string {
+	return uuid.UUID(o).String()
+}
+
+func OrgIdFromString(s string) (OrgId, error) {
+	orgId, err := uuid.FromString(s)
+	if err != nil {
+		return NewOrgId(uuid.UUID{0}), err
+	}
+	return NewOrgId(orgId), nil
 }

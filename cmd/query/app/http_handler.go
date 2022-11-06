@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/mux"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -45,6 +46,7 @@ import (
 
 const (
 	traceIDParam          = "traceID"
+	orgIdParam            = "orgId"
 	endTsParam            = "endTs"
 	lookbackParam         = "lookback"
 	stepParam             = "step"
@@ -120,6 +122,7 @@ func NewAPIHandler(queryService *querysvc.QueryService, tm *tenancy.Manager, opt
 
 // RegisterRoutes registers routes for this handler on the given router
 func (aH *APIHandler) RegisterRoutes(router *mux.Router) {
+	aH.handleFunc(router, aH.getTrace, "/orgs/{%s}/traces/{%s}", orgIdParam, traceIDParam).Methods(http.MethodGet)
 	aH.handleFunc(router, aH.getTrace, "/traces/{%s}", traceIDParam).Methods(http.MethodGet)
 	aH.handleFunc(router, aH.archiveTrace, "/archive/{%s}", traceIDParam).Methods(http.MethodPost)
 	aH.handleFunc(router, aH.search, "/traces").Methods(http.MethodGet)
@@ -421,15 +424,36 @@ func (aH *APIHandler) parseTraceID(w http.ResponseWriter, r *http.Request) (mode
 	return traceID, true
 }
 
+func (aH *APIHandler) parseOrgId(w http.ResponseWriter, r *http.Request) (model.OrgId, bool) {
+	vars := mux.Vars(r)
+	orgIdVar := vars[orgIdParam]
+	if orgIdVar == "" {
+		return model.NewOrgId(uuid.UUID{0}), false
+	}
+	orgId, err := model.OrgIdFromString(orgIdVar)
+	if aH.handleError(w, err, http.StatusBadRequest) {
+		return model.OrgId(orgId), false
+	}
+	return model.OrgId(orgId), true
+}
+
 // getTrace implements the REST API /traces/{trace-id}
 // It parses trace ID from the path, fetches the trace from QueryService,
 // formats it in the UI JSON format, and responds to the client.
 func (aH *APIHandler) getTrace(w http.ResponseWriter, r *http.Request) {
-	traceID, ok := aH.parseTraceID(w, r)
-	if !ok {
+	traceID, traceOk := aH.parseTraceID(w, r)
+	if !traceOk {
 		return
 	}
-	trace, err := aH.queryService.GetTrace(r.Context(), traceID)
+	orgId, orgOk := aH.parseOrgId(w, r)
+	var trace *model.Trace
+	var err error
+	if orgOk {
+		trace, err = aH.queryService.GetOrgTrace(r.Context(), traceID, orgId)
+	} else {
+		trace, err = aH.queryService.GetTrace(r.Context(), traceID)
+	}
+
 	if err == spanstore.ErrTraceNotFound {
 		aH.handleError(w, err, http.StatusNotFound)
 		return
