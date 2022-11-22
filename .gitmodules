@@ -2,3 +2,6 @@
 	path = idl
 	url = https://github.com/jaegertracing/jaeger-idl.git
 	branch = main
+[submodule "jaeger-ui"]
+	path = jaeger-ui
+	url = https://github.com/helios/jaeger-ui.git
