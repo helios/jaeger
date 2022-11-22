@@ -5,4 +5,3 @@
 [submodule "jaeger-ui"]
 	path = jaeger-ui
 	url = https://github.com/helios/jaeger-ui.git
-	branch = main
