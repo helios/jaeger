@@ -1,0 +1,70 @@
+name: Build Jaeger Collector
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: jaeger-collector
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  docker-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Fetch git tags
+        run: |
+          git fetch --prune --unshallow --tags
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18.x
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Export BRANCH variable # for jaeger scripts
+        uses: ./.github/actions/setup-branch
+
+      - name: Extract branch name # for our scripts
+        id: extract-branch-name
+        run: |
+          echo "BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@13d241b293754004c80624b5567555c4a39ffbe3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@aaf69d68aa3fb14c1d5a6be9ac61fe15b48453a2
+
+      - name: Install tools
+        run: make install-ci
+
+      - uses: docker/setup-qemu-action@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        run: |
+          bash scripts/build-upload-docker-jaeger-collector.sh
+          echo "::set-output name=image::$ECR_REGISTRY/$PROJECT_NAME:$COMMIT_HASH"
+          echo "::set-output name=image::$ECR_REGISTRY/$PROJECT_NAME:latest"
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          COMMIT_HASH: ${{ github.sha }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
+          AWS_REGION: ${{ env.AWS_REGION }}
