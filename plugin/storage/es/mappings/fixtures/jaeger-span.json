@@ -14,6 +14,14 @@
       },
       "dynamic_templates":[
         {
+          "queue_time": {
+            "match": "messaging@queue_time",
+            "mapping": {
+              "type": "long"
+            }
+          }
+        },
+        {
           "span_tags_map":{
             "mapping":{
               "type":"keyword",
